@@ -1,0 +1,42 @@
+name: Dependency Updates
+
+on:
+  schedule:
+    - cron: '0 0 * * 1' # Every Monday
+  workflow_dispatch:
+
+jobs:
+  update-dependencies:
+    name: Update Dependencies
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Check for updates
+        run: mvn versions:display-dependency-updates
+
+      - name: Update dependencies
+        run: mvn versions:use-latest-releases
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'chore: update dependencies'
+          title: 'chore: Update Maven dependencies'
+          body: |
+            ## Dependency Updates
+            
+            This PR updates Maven dependencies to their latest versions.
+            
+            Please review the changes and ensure all tests pass.
+          branch: dependency-updates
+          labels: dependencies

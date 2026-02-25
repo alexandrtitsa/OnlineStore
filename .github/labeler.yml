@@ -1,0 +1,49 @@
+# Domain
+domain:
+  - changed-files:
+      - any-glob-to-any-file: 'src/main/java/com/onlinestore/domain/**'
+
+# Application
+application:
+  - changed-files:
+      - any-glob-to-any-file: 'src/main/java/com/onlinestore/application/**'
+
+# Infrastructure
+infrastructure:
+  - changed-files:
+      - any-glob-to-any-file: 'src/main/java/com/onlinestore/infrastructure/**'
+
+# Web
+web:
+  - changed-files:
+      - any-glob-to-any-file: 'src/main/java/com/onlinestore/web/**'
+
+# Tests
+tests:
+  - changed-files:
+      - any-glob-to-any-file: 'src/test/**'
+
+# Documentation
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '*.md'
+          - 'docs/**'
+
+# Dependencies
+dependencies:
+  - changed-files:
+      - any-glob-to-any-file: 'pom.xml'
+
+# CI/CD
+ci-cd:
+  - changed-files:
+      - any-glob-to-any-file: '.github/**'
+
+# Docker
+docker:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'Dockerfile'
+          - 'docker-compose*.yml'
+          - '.dockerignore'
