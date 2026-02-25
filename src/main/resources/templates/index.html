@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::title}, ~{::content})}">
+<head>
+    <title>Home - Online Store</title>
+</head>
+<body>
+<div th:fragment="content">
+    <div class="text-center py-5">
+        <h1 class="display-4">Welcome to Online Store</h1>
+        <p class="lead">A hexagonal architecture demonstration with Spring Boot</p>
+        <hr class="my-4">
+        <div class="row mt-4">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">🛍️ Browse Products</h5>
+                        <p class="card-text">Explore our catalog of available products</p>
+                        <a href="/products" class="btn btn-primary">View Products</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">📦 Create Orders</h5>
+                        <p class="card-text">Place new orders with our easy checkout</p>
+                        <a href="/create-order" class="btn btn-primary">Create Order</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">📊 My Orders</h5>
+                        <p class="card-text">Track your order history and status</p>
+                        <a href="/dashboard" class="btn btn-primary">View Orders</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

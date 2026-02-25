@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::title}, ~{::content})}">
+<head>
+    <title>My Orders - Online Store</title>
+</head>
+<body>
+<div th:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>My Orders</h2>
+        <a href="/create-order" class="btn btn-primary">Create New Order</a>
+    </div>
+
+    <div id="ordersContainer">
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadOrders() {
+            const token = localStorage.getItem('accessToken');
+
+            if (!token) {
+                window.location.href = '/login';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/orders/my-orders', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.status === 401) {
+                    localStorage.clear();
+                    window.location.href = '/login';
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error('Failed to load orders');
+                }
+
+                const orders = await response.json();
+                displayOrders(orders);
+
+            } catch (error) {
+                showAlert('danger', 'Failed to load orders');
+            }
+        }
+
+        function displayOrders(orders) {
+            const container = document.getElementById('ordersContainer');
+
+            if (orders.length === 0) {
+                container.innerHTML = `
+                        <div class="alert alert-info">
+                            <p class="mb-0">You don't have any orders yet. <a href="/create-order">Create your first order</a></p>
+                        </div>
+                    `;
+                return;
+            }
+
+            const html = orders.map(order => `
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <h5 class="card-title">Order #${order.id.substring(0, 8)}</h5>
+                                    <p class="card-text">
+                                        <span class="badge bg-${getStatusColor(order.status)}">${order.status}</span>
+                                    </p>
+                                    <p class="mb-1"><strong>Items:</strong></p>
+                                    <ul class="mb-2">
+                                        ${order.items.map(item => `
+                                            <li>${item.productName} x ${item.quantity} - $${item.subtotal}</li>
+                                        `).join('')}
+                                    </ul>
+                                    <p class="mb-0"><small class="text-muted">Created: ${new Date(order.createdAt).toLocaleString()}</small></p>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <h4>$${order.totalAmount}</h4>
+                                    ${order.status === 'PENDING_PAYMENT' ? `
+                                        <button class="btn btn-success btn-sm" onclick="payOrder('${order.id}')">Pay Now</button>
+                                    ` : ''}
+                                    ${order.status !== 'COMPLETED' && order.status !== 'CANCELLED' ? `
+                                        <button class="btn btn-danger btn-sm" onclick="cancelOrder('${order.id}')">Cancel</button>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+
+            container.innerHTML = html;
+        }
+
+        function getStatusColor(status) {
+            const colors = {
+                'DRAFT': 'secondary',
+                'PENDING_PAYMENT': 'warning',
+                'PAID': 'success',
+                'CANCELLED': 'danger',
+                'COMPLETED': 'primary'
+            };
+            return colors[status] || 'secondary';
+        }
+
+        async function payOrder(orderId) {
+            const token = localStorage.getItem('accessToken');
+            const paymentId = 'PAYMENT-' + Date.now();
+
+            try {
+                const response = await fetch(`/api/orders/${orderId}/pay`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ orderId, paymentId })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Payment failed');
+                }
+
+                showAlert('success', 'Payment successful!');
+                loadOrders();
+
+            } catch (error) {
+                showAlert('danger', 'Payment failed. Please try again.');
+            }
+        }
+
+        async function cancelOrder(orderId) {
+            if (!confirm('Are you sure you want to cancel this order?')) {
+                return;
+            }
+
+            const token = localStorage.getItem('accessToken');
+
+            try {
+                const response = await fetch(`/api/orders/${orderId}/cancel`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ orderId, reason: 'Cancelled by user' })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Cancellation failed');
+                }
+
+                showAlert('success', 'Order cancelled successfully');
+                loadOrders();
+
+            } catch (error) {
+                showAlert('danger', 'Failed to cancel order');
+            }
+        }
+
+        loadOrders();
+    </script>
+</div>
+</body>
+</html>

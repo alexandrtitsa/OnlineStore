@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:fragment="layout (title, content)">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title} ?: 'Online Store'">Online Store</title>
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .content {
+            flex: 1;
+        }
+        .navbar-brand {
+            font-weight: bold;
+        }
+        .alert-container {
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            z-index: 1050;
+            max-width: 400px;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+        <a class="navbar-brand" href="/">🛒 Online Store</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/products">Products</a>
+                </li>
+                <li class="nav-item" id="nav-dashboard" style="display: none;">
+                    <a class="nav-link" href="/dashboard">My Orders</a>
+                </li>
+                <li class="nav-item" id="nav-create-order" style="display: none;">
+                    <a class="nav-link" href="/create-order">Create Order</a>
+                </li>
+            </ul>
+            <ul class="navbar-nav">
+                <li class="nav-item" id="nav-login">
+                    <a class="nav-link" href="/login">Login</a>
+                </li>
+                <li class="nav-item" id="nav-register">
+                    <a class="nav-link" href="/register">Register</a>
+                </li>
+                <li class="nav-item" id="nav-user" style="display: none;">
+                    <span class="nav-link" id="user-email"></span>
+                </li>
+                <li class="nav-item" id="nav-logout" style="display: none;">
+                    <button class="btn btn-link nav-link" onclick="logout()">Logout</button>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="alert-container" id="alertContainer"></div>
+
+<main class="content container my-4" th:insert="${content}">
+    <!-- Page content goes here -->
+</main>
+
+<footer class="bg-light text-center py-3 mt-auto">
+    <div class="container">
+        <p class="mb-0 text-muted">© 2026 Online Store. Hexagonal Architecture Demo.</p>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/js/auth.js}"></script>
+<script th:inline="javascript">
+    // Update navbar based on auth status
+    function updateNavbar() {
+        const token = localStorage.getItem('accessToken');
+        const email = localStorage.getItem('userEmail');
+
+        if (token) {
+            document.getElementById('nav-login').style.display = 'none';
+            document.getElementById('nav-register').style.display = 'none';
+            document.getElementById('nav-dashboard').style.display = 'block';
+            document.getElementById('nav-create-order').style.display = 'block';
+            document.getElementById('nav-user').style.display = 'block';
+            document.getElementById('nav-logout').style.display = 'block';
+            document.getElementById('user-email').textContent = email || 'User';
+        } else {
+            document.getElementById('nav-login').style.display = 'block';
+            document.getElementById('nav-register').style.display = 'block';
+            document.getElementById('nav-dashboard').style.display = 'none';
+            document.getElementById('nav-create-order').style.display = 'none';
+            document.getElementById('nav-user').style.display = 'none';
+            document.getElementById('nav-logout').style.display = 'none';
+        }
+    }
+
+    function logout() {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('userEmail');
+        window.location.href = '/login';
+    }
+
+    updateNavbar();
+</script>
+</body>
+</html>

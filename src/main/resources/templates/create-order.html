@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::title}, ~{::content})}">
+<head>
+    <title>Create Order - Online Store</title>
+</head>
+<body>
+<div th:fragment="content">
+    <h2 class="mb-4">Create New Order</h2>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Order Items</h5>
+                    <div id="orderItems">
+                        <!-- Order items will be added here -->
+                    </div>
+                    <button class="btn btn-secondary" onclick="addOrderItem()">+ Add Item</button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Order Summary</h5>
+                    <p>Items: <span id="itemCount">0</span></p>
+                    <hr>
+                    <button class="btn btn-primary w-100" onclick="submitOrder()">Place Order</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let itemCounter = 0;
+
+        function addOrderItem() {
+            const container = document.getElementById('orderItems');
+            const itemId = ++itemCounter;
+
+            const itemHtml = `
+                    <div class="mb-3 border p-3 rounded" id="item-${itemId}">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label">Product ID</label>
+                                <input type="text" class="form-control product-id" placeholder="UUID">
+                                <small class="form-text text-muted">Check your database for product IDs</small>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Quantity</label>
+                                <input type="number" class="form-control quantity" min="1" value="1">
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button class="btn btn-danger" onclick="removeItem(${itemId})">Remove</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+            container.insertAdjacentHTML('beforeend', itemHtml);
+            updateItemCount();
+        }
+
+        function removeItem(itemId) {
+            document.getElementById(`item-${itemId}`).remove();
+            updateItemCount();
+        }
+
+        function updateItemCount() {
+            const count = document.getElementById('orderItems').children.length;
+            document.getElementById('itemCount').textContent = count;
+        }
+
+        async function submitOrder() {
+            const token = localStorage.getItem('accessToken');
+
+            if (!token) {
+                window.location.href = '/login';
+                return;
+            }
+
+            const items = [];
+            const itemElements = document.querySelectorAll('#orderItems > div');
+
+            if (itemElements.length === 0) {
+                showAlert('warning', 'Please add at least one item');
+                return;
+            }
+
+            itemElements.forEach(el => {
+                const productId = el.querySelector('.product-id').value;
+                const quantity = parseInt(el.querySelector('.quantity').value);
+
+                if (productId && quantity > 0) {
+                    items.push({ productId, quantity });
+                }
+            });
+
+            if (items.length === 0) {
+                showAlert('warning', 'Please fill in all item details');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/orders', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ items })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    showAlert('danger', error.message || 'Failed to create order');
+                    return;
+                }
+
+                const result = await response.json();
+                showAlert('success', 'Order created successfully!');
+
+                setTimeout(() => {
+                    window.location.href = '/dashboard';
+                }, 1500);
+
+            } catch (error) {
+                showAlert('danger', 'Network error. Please try again.');
+            }
+        }
+
+        // Add first item by default
+        addOrderItem();
+    </script>
+</div>
+</body>
+</html>
